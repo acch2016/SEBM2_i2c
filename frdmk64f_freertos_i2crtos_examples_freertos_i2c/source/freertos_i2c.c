@@ -484,7 +484,6 @@ i2c_master_handle_t g_m_handle;
 //i2c_master_transfer_t masterXfer;
 
 //SemaphoreHandle_t semaphoreISR;
-//SemaphoreHandle_t semaphoreISR_;
 SemaphoreHandle_t mutex;
 EventGroupHandle_t event;
 TaskHandle_t init_i2c_handle;
@@ -500,7 +499,6 @@ static void i2c_master_callback(I2C_Type *base, i2c_master_handle_t *handle,
 //	PRINTF(" i2c_master_callback \n\r");
 
 	BaseType_t reschedule;
-//	BaseType_t reschedule_;
 	reschedule = pdFALSE;
 
 	if (status == kStatus_Success)
@@ -514,25 +512,6 @@ static void i2c_master_callback(I2C_Type *base, i2c_master_handle_t *handle,
     portYIELD_FROM_ISR(reschedule);
 }
 
-static void i2c_master_callback_2(I2C_Type *base, i2c_master_handle_t *handle,
-        status_t status, void * userData)
-{
-//	PRINTF(" i2c_master_callback \n\r");
-
-	BaseType_t reschedule;
-//	BaseType_t reschedule_;
-	reschedule = pdFALSE;
-
-	if (status == kStatus_Success)
-	{
-//		  xSemaphoreGiveFromISR(semaphoreISR, &reschedule); /* TODO: de aqui no pasa */
-		xEventGroupSetBitsFromISR(event, EVENT_BIT, &reschedule);
-	}
-  //    xSemaphoreGiveFromISR(semaphoreISR_, &reschedule_); /* TODO: de aqui no pasa */
-//    xEventGroupSetBits(event,EVENT_BIT);
-//    portYIELD_FROM_ISR(pdTRUE == reschedule || pdTRUE == reschedule_ ? pdTRUE : pdFALSE);
-    portYIELD_FROM_ISR(reschedule);
-}
 
 void init_i2c(void *arg)
 {
@@ -557,14 +536,13 @@ void init_i2c(void *arg)
 
 	I2C_MasterInit(I2C0, &masterConfig, CLOCK_GetFreq(kCLOCK_BusClk));
 
-	memset(&g_m_handle, 0, sizeof(g_m_handle));
-//	memset(&masterXfer, 0, sizeof(masterXfer));
+//	memset(&g_m_handle, 0, sizeof(g_m_handle));
 	I2C_MasterTransferCreateHandle(I2C0, &g_m_handle, i2c_master_callback, NULL);
 
 	NVIC_EnableIRQ(I2C0_IRQn);
-	NVIC_EnableIRQ(PORTB_IRQn);
+	//NVIC_EnableIRQ(PORTB_IRQn);
 	NVIC_SetPriority(I2C0_IRQn,5);
-	NVIC_SetPriority(PORTB_IRQn,5);
+	//NVIC_SetPriority(PORTB_IRQn,5);
 
 	for(;;)
 	{
@@ -580,7 +558,7 @@ void ST_RTC(void *arg)
 	PRINTF(" ST_RTC \n\r");
 
 	i2c_master_transfer_t masterXfer;
-    memset(&masterXfer, 0, sizeof(masterXfer));
+//    memset(&masterXfer, 0, sizeof(masterXfer));
 
 	uint8_t data_buffer = 0x80;
 	masterXfer.slaveAddress = 0x6F;
@@ -613,14 +591,14 @@ void Read_RTC(void *arg)
 {
 	uint8_t status;
 	PRINTF(" Read_RTC \n\r");
-	i2c_master_handle_t g_m_handle_2;
-	I2C_MasterTransferCreateHandle(I2C0, &g_m_handle_2, i2c_master_callback_2, NULL);
+//	i2c_master_handle_t g_m_handle_2;
+//	I2C_MasterTransferCreateHandle(I2C0, &g_m_handle_2, i2c_master_callback_2, NULL);
 
 	i2c_master_transfer_t masterXfer;
 	memset(&masterXfer, 0, sizeof(masterXfer));
 
-	uint8_t *buffer;
-	memset(&buffer, 0, sizeof(buffer));
+	uint8_t buffer;
+//	uint8_t *buffer;
 
 	while(1)
 	{
@@ -629,12 +607,12 @@ void Read_RTC(void *arg)
 		masterXfer.direction = kI2C_Read;
 		masterXfer.subaddress = (uint32_t)0x00;
 		masterXfer.subaddressSize = 1U;
-		masterXfer.data = buffer;
+		masterXfer.data = &buffer;
 		masterXfer.dataSize = 1U;
 		masterXfer.flags = kI2C_TransferDefaultFlag;
 
 		xSemaphoreTake(mutex, portMAX_DELAY);
-		status = I2C_MasterTransferNonBlocking(I2C0, &g_m_handle_2, &masterXfer);
+		status = I2C_MasterTransferNonBlocking(I2C0, &g_m_handle, &masterXfer);
 
 		if (status != kStatus_Success)
 		    {
@@ -658,7 +636,8 @@ void Read_RTC(void *arg)
 
 		xSemaphoreGive(mutex);
 
-		PRINTF("%X\n\r", *buffer);
+		PRINTF("%X\n\r", buffer);
+//		PRINTF("%X\n\r", (uint8_t)buffer);
 	}
 
 }
@@ -674,7 +653,6 @@ int main(void) {
 
 
 //	semaphoreISR = xSemaphoreCreateBinary();
-//	semaphoreISR_ = xSemaphoreCreateBinary();
     mutex = xSemaphoreCreateMutex();
     event = xEventGroupCreate();
 

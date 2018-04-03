@@ -2,19 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="I2C_MasterTransferCreateHandle" key="selection"/>
+		<item value="memset" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="memset"/>
+			<item value="i2c_master_callback_2"/>
 			<item value="I2C_MasterTransferCreateHandle"/>
 			<item value="masterXfer_R"/>
 			<item value="portb"/>
 			<item value="sourceClock"/>
 			<item value="I2C_MasterInit"/>
 			<item value="I2C0_CLK_SRC"/>
-			<item value="masterXfer"/>
 		</list>
 		<list key="replacehistory">
 			<item value="masterXfer"/>

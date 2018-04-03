@@ -1,6 +1,6 @@
-20:47:26 **** Incremental Build of configuration Debug for project frdmk64f_freertos_i2crtos_examples_freertos_i2c ****
-make -r -j8 all 
+20:09:57 **** Incremental Build of configuration Debug for project frdmk64f_freertos_i2crtos_examples_freertos_i2c ****
+make -r -j4 all 
 make: Nothing to be done for `all'.
 
-20:47:26 Build Finished (took 221ms)
+20:09:57 Build Finished (took 222ms)
 

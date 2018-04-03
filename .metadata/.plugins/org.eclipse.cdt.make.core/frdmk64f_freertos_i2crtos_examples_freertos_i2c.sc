@@ -2,8 +2,8 @@
 <?scdStore version="2"?><scannerInfo id="org.eclipse.cdt.make.core.discoveredScannerInfo">
 <instance id="com.crt.advproject.config.exe.debug.1938264122;com.crt.advproject.config.exe.debug.1938264122.;com.crt.advproject.gcc.exe.debug.2069975875;com.crt.advproject.compiler.input.200724156">
 <collector id="org.eclipse.cdt.make.core.PerProjectSICollector">
-<includePath path="c:/nxp/mcuxpressoide_10.1.1_606/ide/tools/redlib/include"/>
-<includePath path="c:/nxp/mcuxpressoide_10.1.1_606/ide/tools/features/include"/>
+<includePath path="c:/nxp/mcuxpressoide_10.1.0_589/ide/tools/redlib/include"/>
+<includePath path="c:/nxp/mcuxpressoide_10.1.0_589/ide/tools/features/include"/>
 <definedSymbol symbol="__STDC__=1"/>
 <definedSymbol symbol="__STDC_VERSION__=201112L"/>
 <definedSymbol symbol="__STDC_UTF_16__=1"/>
@@ -352,8 +352,8 @@
 </instance>
 <instance id="com.crt.advproject.config.exe.debug.1938264122;com.crt.advproject.config.exe.debug.1938264122.;com.crt.advproject.gas.exe.debug.2111197940;com.crt.advproject.assembler.input.204389377">
 <collector id="org.eclipse.cdt.make.core.PerProjectSICollector">
-<includePath path="c:/nxp/mcuxpressoide_10.1.1_606/ide/tools/redlib/include"/>
-<includePath path="c:/nxp/mcuxpressoide_10.1.1_606/ide/tools/features/include"/>
+<includePath path="c:/nxp/mcuxpressoide_10.1.0_589/ide/tools/redlib/include"/>
+<includePath path="c:/nxp/mcuxpressoide_10.1.0_589/ide/tools/features/include"/>
 <definedSymbol symbol="__STDC__=1"/>
 <definedSymbol symbol="__STDC_VERSION__=201112L"/>
 <definedSymbol symbol="__STDC_UTF_16__=1"/>
