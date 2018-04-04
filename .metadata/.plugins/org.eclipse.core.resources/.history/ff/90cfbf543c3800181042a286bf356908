@@ -490,12 +490,6 @@ TaskHandle_t init_i2c_handle;
 TaskHandle_t ST_RTC_handle;
 EventBits_t uxBits;
 
-uint8_t * read_Datetime (uint8_t reg);
-void write_Datetime (uint8_t reg, uint8_t *dato);
-
-
-
-
 /*
  * @brief   Application entry point.
  */
@@ -550,27 +544,28 @@ void init_i2c(void *arg)
 	NVIC_SetPriority(I2C0_IRQn,5);
 	//NVIC_SetPriority(PORTB_IRQn,5);
 
+	for(;;)
+	{
+		vTaskDelete(init_i2c_handle);
+	}
+
 }
 
-void write_Datetime  (uint8_t reg, uint8_t *dato)
+void ST_RTC(void *arg)
 {
-//	ST_RTC_handle = xTaskGetCurrentTaskHandle();
-
-
-	dat_ = (dato[0]-0x30) << 4;
-	dat_ |= dato[1]-0x30;
+	ST_RTC_handle = xTaskGetCurrentTaskHandle();
 
 	PRINTF(" ST_RTC \n\r");
 
 	i2c_master_transfer_t masterXfer;
 //    memset(&masterXfer, 0, sizeof(masterXfer));
 
-	uint8_t* data_buffer = dat_;
+	uint8_t data_buffer = 0x80;
 	masterXfer.slaveAddress = 0x6F;
-	masterXfer.direction = kI2C_Read;
-	masterXfer.subaddress = (uint32_t)reg;
+	masterXfer.direction = kI2C_Write;
+	masterXfer.subaddress = (uint32_t)0x00;
 	masterXfer.subaddressSize = 1U;
-	masterXfer.data = data_buffer;
+	masterXfer.data = &data_buffer;
 	masterXfer.dataSize = 1U;
 	masterXfer.flags = kI2C_TransferDefaultFlag;
 
@@ -583,13 +578,12 @@ void write_Datetime  (uint8_t reg, uint8_t *dato)
 //	xSemaphoreTake(semaphoreISR, portMAX_DELAY);
 	xEventGroupWaitBits(event, EVENT_BIT, pdTRUE, pdTRUE, portMAX_DELAY);
 	xSemaphoreGive(mutex);
-
-//	for(;;)
-//	{
-//		vTaskDelete(ST_RTC_handle);
-////		vTaskDelay(1000);
-//	}
-	return 0;
+	delay(3000);
+	for(;;)
+	{
+		vTaskDelete(ST_RTC_handle);
+//		vTaskDelay(1000);
+	}
 
 }
 
@@ -606,6 +600,8 @@ void Read_RTC(void *arg)
 	uint8_t buffer;
 //	uint8_t *buffer;
 
+	while(1)
+	{
 
 		masterXfer.slaveAddress = 0x6F;
 		masterXfer.direction = kI2C_Read;
@@ -635,43 +631,41 @@ void Read_RTC(void *arg)
 			PRINTF("EVENT_BIT was set\n\r");
 		}
 
+
+//		delay(1000);
+
 		xSemaphoreGive(mutex);
-		ones = buffer & MASK_ONES;
 
 		PRINTF("%X\n\r", buffer);
 //		PRINTF("%X\n\r", (uint8_t)buffer);
-
+	}
 
 }
-//
-//int main(void) {
-//
-//  	/* Init board hardware. */
-//    BOARD_InitBootPins();
-//    BOARD_InitBootClocks();
-//    BOARD_InitBootPeripherals();
-//  	/* Init FSL debug console. */
-//    BOARD_InitDebugConsole();
-//
-//
-////	semaphoreISR = xSemaphoreCreateBinary();
-//    mutex = xSemaphoreCreateMutex();
-//    event = xEventGroupCreate();
-//
-//    xTaskCreate(init_i2c, "init_i2c", configMINIMAL_STACK_SIZE+100, NULL, configMAX_PRIORITIES, NULL);
-//	xTaskCreate(ST_RTC, "ST_RTC", configMINIMAL_STACK_SIZE+100, NULL, configMAX_PRIORITIES, NULL);
-//	xTaskCreate(Read_RTC, "Read_RTC", configMINIMAL_STACK_SIZE+100, NULL, configMAX_PRIORITIES, NULL);
-//	vTaskStartScheduler();
-//
-//	read_Datetime(SEGundos, {'1','2'});
-//	read_Datetime(Minutos, {'1','2'});
-//	read_Datetime(Horas, {'1','2'});
-//
-//    /* Force the counter to be placed into memory. */
-//    volatile static int i = 0 ;
-//    /* Enter an infinite loop, just incrementing a counter. */
-//    while(1) {
-//        i++ ;
-//    }
-//    return 0 ;
-//}
+
+int main(void) {
+
+  	/* Init board hardware. */
+    BOARD_InitBootPins();
+    BOARD_InitBootClocks();
+    BOARD_InitBootPeripherals();
+  	/* Init FSL debug console. */
+    BOARD_InitDebugConsole();
+
+
+//	semaphoreISR = xSemaphoreCreateBinary();
+    mutex = xSemaphoreCreateMutex();
+    event = xEventGroupCreate();
+
+    xTaskCreate(init_i2c, "init_i2c", configMINIMAL_STACK_SIZE+100, NULL, configMAX_PRIORITIES, NULL);
+	xTaskCreate(ST_RTC, "ST_RTC", configMINIMAL_STACK_SIZE+100, NULL, configMAX_PRIORITIES, NULL);
+	xTaskCreate(Read_RTC, "Read_RTC", configMINIMAL_STACK_SIZE+100, NULL, configMAX_PRIORITIES, NULL);
+	vTaskStartScheduler();
+
+    /* Force the counter to be placed into memory. */
+    volatile static int i = 0 ;
+    /* Enter an infinite loop, just incrementing a counter. */
+    while(1) {
+        i++ ;
+    }
+    return 0 ;
+}
