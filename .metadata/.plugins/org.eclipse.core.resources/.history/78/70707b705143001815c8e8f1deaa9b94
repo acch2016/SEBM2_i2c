@@ -34,13 +34,6 @@ typedef long BaseType_t;
 #define MASK_TENS_OF_YEAR   0xF0
 
 #define ASCII_MASK 0x30
-#define REGISTER_SEC
-#define REGISTER_MIN
-#define REGISTER_HOUR
-#define REGISTER_DAY
-#define REGISTER_MONTH
-#define REGISTER_YEAR
-
 
 //volatile bool g_MasterCompletionFlag = false;
 i2c_master_handle_t g_m_handle;
@@ -53,13 +46,10 @@ TaskHandle_t init_i2c_handle;
 TaskHandle_t ST_RTC_handle;
 EventBits_t uxBits;
 
-uint8_t * read_RTC (uint8_t reg);
-void write_RTC (uint8_t reg, uint8_t *dato);
+uint8_t * read_DateTime (uint8_t reg);
+void write_DateTime (uint8_t reg, uint8_t *dato);
 
-void write_hour(uint8_t *dato);
-void write_date(uint8_t *dato);
-void read_hour(uint8_t *dato);
-void read_date(uint8_t *dato);
+
 
 /*
  * @brief   Application entry point.
@@ -116,40 +106,22 @@ void init_i2c(void *arg)
 
 }
 
-void write_hour(uint8_t *dato)
+void write_DateTime  (uint8_t reg, uint8_t *dato)
 {
-	uint8_t seconds;
-	uint8_t minutes;
-	uint8_t hours;
+	static uint8_t dateTime[10];
 
-	seconds = ( (dato[0] - ASCII_MASK) << 4 ) | ( dato[1] - ASCII_MASK ) ;
-	write_RTC(0x00, seconds);
-
-	minutes = ( (dato[2] - ASCII_MASK) << 4 ) | ( dato[3] - ASCII_MASK );
-	write_RTC(0x01, minutes);
-
-	hours   = ( (dato[4] - ASCII_MASK) << 4 ) | ( dato[5] - ASCII_MASK );
-	write_RTC(0x02, hours);
-}
-void write_date(uint8_t *dato)
-{
-	uint8_t days;
-	uint8_t months;
-	uint8_t years;
-
-	days   = ( (dato[0] - ASCII_MASK) << 4 ) | ( dato[1] - ASCII_MASK );
-	write_RTC(0x04, days);
-
-	months = ( (dato[2] - ASCII_MASK) << 4 ) | ( dato[3] - ASCII_MASK );
-	write_RTC(0x05, months);
-
-	years  = ( (dato[4] - ASCII_MASK) << 4 ) | ( dato[5] - ASCII_MASK );
-	write_RTC(0x06, years);
-}
-
-void write_RTC(uint8_t reg, uint8_t *dato)
-{
-	static uint8_t dateTime[6];
+	dateTime = (dato[0] - ASCII_MASK) << 4;
+	dateTime |= dato[1] - ASCII_MASK;
+	dateTime = (dato[2] - ASCII_MASK) << 4;
+	dateTime |= dato[3] - ASCII_MASK;
+	dateTime = (dato[4] - ASCII_MASK) << 4;
+	dateTime |= dato[5] - ASCII_MASK;
+	dateTime = (dato[6] - ASCII_MASK) << 4;
+	dateTime |= dato[7] - ASCII_MASK;
+	dateTime = (dato[8] - ASCII_MASK) << 4;
+	dateTime |= dato[9] - ASCII_MASK;
+	dateTime = (dato[10]- ASCII_MASK) << 4;
+	dateTime |= dato[11]- ASCII_MASK;
 
 	i2c_master_transfer_t masterXfer;
 
@@ -181,43 +153,8 @@ void write_RTC(uint8_t reg, uint8_t *dato)
 
 }
 
-void read_hour(uint8_t *time)
-{
-	uint8_t buffer;
 
-	buffer = read_RTC(0x00);
-	time[0] =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-	time[1] = ( (buffer & MASK_TENS_OF_SECOND)>>4 ) + ASCII_MASK;
-
-	buffer = read_RTC(0x01);
-	time[2] =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-	time[3] = ( (buffer & MASK_TENS_OF_MINUTE)>>4 ) + ASCII_MASK;
-
-	buffer = read_RTC(0x02);
-	time[4] =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-	time[5] = ( (buffer & MASK_TENS_OF_HOUR  )>>4 ) + ASCII_MASK;
-
-}
-
-void read_date(uint8_t *date)
-{
-	/* TODO: ¿buffer needs to be defined as a pointer? */
-	uint8_t buffer;
-
-	buffer = read_RTC(0x04);
-	date[0] =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-	date[1] = ( (buffer & MASK_TENS_OF_DAY    )>>4 ) + ASCII_MASK;
-
-	buffer = read_RTC(0x05);
-	date[2] =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-	date[3] = ( (buffer & MASK_TENS_OF_MONTH  )>>4 ) + ASCII_MASK;
-
-	buffer = read_RTC(0x06);
-	date[4] =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-	date[5] = ( (buffer & MASK_TENS_OF_YEAR   )>>4 ) + ASCII_MASK;
-}
-
-uint8_t * read_RTC(uint8_t reg)
+uint8_t * read_DateTime(uint8_t reg)
 {
 	uint8_t status;
 	PRINTF(" Read_RTC \n\r");
@@ -229,6 +166,7 @@ uint8_t * read_RTC(uint8_t reg)
 
 	uint8_t buffer; //1st option
 //	uint8_t *buffer; //2nd option
+
 
 		masterXfer.slaveAddress = 0x6F;
 		masterXfer.direction = kI2C_Read;
@@ -261,12 +199,32 @@ uint8_t * read_RTC(uint8_t reg)
 		xSemaphoreGive(mutex);
 
 //		ones = buffer & MASK_ONES;
+		units_of_second =   (buffer & MASK_UNITS         )      + ASCII_MASK;
+		tens_of_second  = ( (buffer & MASK_TENS_OF_SECOND)>>4 ) + ASCII_MASK;
+
+		units_of_minute =   (buffer & MASK_UNITS         )      + ASCII_MASK;
+		tens_of_minute  = ( (buffer & MASK_TENS_OF_MINUTE)>>4 ) + ASCII_MASK;
+
+		units_of_hour   =   (buffer & MASK_UNITS         )      + ASCII_MASK;
+		tens_of_hour    = ( (buffer & MASK_TENS_OF_HOUR  )>>4 ) + ASCII_MASK;
+
+		//Date
+		units_of_day   =   (buffer & MASK_UNITS          )      + ASCII_MASK;
+		tens_of_day    = ( (buffer & MASK_TENS_OF_DAY    )>>4 ) + ASCII_MASK;
+
+		units_of_month =   (buffer & MASK_UNITS          )      + ASCII_MASK;
+		tens_of_month  = ( (buffer & MASK_TENS_OF_MONTH  )>>4 ) + ASCII_MASK;
+
+		units_of_year  =   (buffer & MASK_UNITS          )      + ASCII_MASK;
+		tens_of_year   = ( (buffer & MASK_TENS_OF_YEAR   )>>4 ) + ASCII_MASK;
+
+		dateTime[0] = units_of_second;
 
 		PRINTF("%X\n\r", buffer);
 //		PRINTF("%X\n\r", buffer); //1st option
 //		PRINTF("%X\n\r", (uint8_t)buffer); //2nd option
 
-		return buffer;
+		return dateTime;
 }
 
 //void Read_RTC(void *arg)

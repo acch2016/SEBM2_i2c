@@ -118,10 +118,6 @@ void init_i2c(void *arg)
 
 void write_hour(uint8_t *dato)
 {
-	uint8_t seconds;
-	uint8_t minutes;
-	uint8_t hours;
-
 	seconds = ( (dato[0] - ASCII_MASK) << 4 ) | ( dato[1] - ASCII_MASK ) ;
 	write_RTC(0x00, seconds);
 
@@ -133,10 +129,6 @@ void write_hour(uint8_t *dato)
 }
 void write_date(uint8_t *dato)
 {
-	uint8_t days;
-	uint8_t months;
-	uint8_t years;
-
 	days   = ( (dato[0] - ASCII_MASK) << 4 ) | ( dato[1] - ASCII_MASK );
 	write_RTC(0x04, days);
 
@@ -183,8 +175,6 @@ void write_RTC(uint8_t reg, uint8_t *dato)
 
 void read_hour(uint8_t *time)
 {
-	uint8_t buffer;
-
 	buffer = read_RTC(0x00);
 	time[0] =   (buffer & MASK_UNITS         )      + ASCII_MASK;
 	time[1] = ( (buffer & MASK_TENS_OF_SECOND)>>4 ) + ASCII_MASK;
@@ -201,9 +191,6 @@ void read_hour(uint8_t *time)
 
 void read_date(uint8_t *date)
 {
-	/* TODO: ¿buffer needs to be defined as a pointer? */
-	uint8_t buffer;
-
 	buffer = read_RTC(0x04);
 	date[0] =   (buffer & MASK_UNITS          )      + ASCII_MASK;
 	date[1] = ( (buffer & MASK_TENS_OF_DAY    )>>4 ) + ASCII_MASK;
@@ -229,6 +216,7 @@ uint8_t * read_RTC(uint8_t reg)
 
 	uint8_t buffer; //1st option
 //	uint8_t *buffer; //2nd option
+
 
 		masterXfer.slaveAddress = 0x6F;
 		masterXfer.direction = kI2C_Read;
@@ -261,6 +249,26 @@ uint8_t * read_RTC(uint8_t reg)
 		xSemaphoreGive(mutex);
 
 //		ones = buffer & MASK_ONES;
+//		units_of_second =   (buffer & MASK_UNITS         )      + ASCII_MASK;
+//		tens_of_second  = ( (buffer & MASK_TENS_OF_SECOND)>>4 ) + ASCII_MASK;
+//
+//		units_of_minute =   (buffer & MASK_UNITS         )      + ASCII_MASK;
+//		tens_of_minute  = ( (buffer & MASK_TENS_OF_MINUTE)>>4 ) + ASCII_MASK;
+//
+//		units_of_hour   =   (buffer & MASK_UNITS         )      + ASCII_MASK;
+//		tens_of_hour    = ( (buffer & MASK_TENS_OF_HOUR  )>>4 ) + ASCII_MASK;
+//
+//		//Date
+//		units_of_day   =   (buffer & MASK_UNITS          )      + ASCII_MASK;
+//		tens_of_day    = ( (buffer & MASK_TENS_OF_DAY    )>>4 ) + ASCII_MASK;
+//
+//		units_of_month =   (buffer & MASK_UNITS          )      + ASCII_MASK;
+//		tens_of_month  = ( (buffer & MASK_TENS_OF_MONTH  )>>4 ) + ASCII_MASK;
+//
+//		units_of_year  =   (buffer & MASK_UNITS          )      + ASCII_MASK;
+//		tens_of_year   = ( (buffer & MASK_TENS_OF_YEAR   )>>4 ) + ASCII_MASK;
+
+
 
 		PRINTF("%X\n\r", buffer);
 //		PRINTF("%X\n\r", buffer); //1st option
