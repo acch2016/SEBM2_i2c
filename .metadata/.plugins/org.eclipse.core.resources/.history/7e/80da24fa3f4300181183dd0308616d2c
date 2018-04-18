@@ -22,19 +22,6 @@
 typedef long BaseType_t;
 #define EVENT_BIT (1<<0)
 #define I2C_BAUDRATE 100000U
-
-#define MASK_UNITS          0x0F
-
-#define MASK_TENS_OF_SECOND 0x70
-#define MASK_TENS_OF_MINUTE 0x70
-#define MASK_TENS_OF_HOUR   0x10
-
-#define MASK_TENS_OF_DAY    0x30
-#define MASK_TENS_OF_MONTH  0x10
-#define MASK_TENS_OF_YEAR   0xF0
-
-#define ASCII_MASK 0x30
-
 //volatile bool g_MasterCompletionFlag = false;
 i2c_master_handle_t g_m_handle;
 //i2c_master_transfer_t masterXfer;
@@ -48,6 +35,7 @@ EventBits_t uxBits;
 
 uint8_t * read_DateTime (uint8_t reg);
 void write_DateTime (uint8_t reg, uint8_t *dato);
+
 
 
 
@@ -97,6 +85,7 @@ void init_i2c(void *arg)
 
 	I2C_MasterInit(I2C0, &masterConfig, CLOCK_GetFreq(kCLOCK_BusClk));
 
+//	memset(&g_m_handle, 0, sizeof(g_m_handle));
 	I2C_MasterTransferCreateHandle(I2C0, &g_m_handle, i2c_master_callback, NULL);
 
 	NVIC_EnableIRQ(I2C0_IRQn);
@@ -108,24 +97,20 @@ void init_i2c(void *arg)
 
 void write_DateTime  (uint8_t reg, uint8_t *dato)
 {
-	static uint8_t dateTime[10];
+//	ST_RTC_handle = xTaskGetCurrentTaskHandle();
 
-	dateTime = (dato[0] - ASCII_MASK) << 4;
-	dateTime |= dato[1] - ASCII_MASK;
-	dateTime = (dato[2] - ASCII_MASK) << 4;
-	dateTime |= dato[3] - ASCII_MASK;
-	dateTime = (dato[4] - ASCII_MASK) << 4;
-	dateTime |= dato[5] - ASCII_MASK;
-	dateTime = (dato[6] - ASCII_MASK) << 4;
-	dateTime |= dato[7] - ASCII_MASK;
-	dateTime = (dato[8] - ASCII_MASK) << 4;
-	dateTime |= dato[9] - ASCII_MASK;
-	dateTime = (dato[10]- ASCII_MASK) << 4;
-	dateTime |= dato[11]- ASCII_MASK;
+	static uint8_t* dat_ = 0;
+
+
+	dat_ = (dato[0]-0x30) << 4;
+	dat_ |= dato[1]-0x30;
+
+	PRINTF(" ST_RTC \n\r");
 
 	i2c_master_transfer_t masterXfer;
+//    memset(&masterXfer, 0, sizeof(masterXfer));
 
-	uint8_t* data_buffer = dateTime;
+	uint8_t* data_buffer = dat_;
 	masterXfer.slaveAddress = 0x6F;
 	masterXfer.direction = kI2C_Read;
 	masterXfer.subaddress = (uint32_t)reg;
@@ -154,7 +139,7 @@ void write_DateTime  (uint8_t reg, uint8_t *dato)
 }
 
 
-uint8_t * read_DateTime(uint8_t reg)
+void read_DateTime(void *arg)
 {
 	uint8_t status;
 	PRINTF(" Read_RTC \n\r");
@@ -164,13 +149,13 @@ uint8_t * read_DateTime(uint8_t reg)
 	i2c_master_transfer_t masterXfer;
 	memset(&masterXfer, 0, sizeof(masterXfer));
 
-	uint8_t buffer; //1st option
-//	uint8_t *buffer; //2nd option
+	uint8_t buffer;
+//	uint8_t *buffer;
 
 
 		masterXfer.slaveAddress = 0x6F;
 		masterXfer.direction = kI2C_Read;
-		masterXfer.subaddress = (uint32_t)reg;
+		masterXfer.subaddress = (uint32_t)0x00;
 		masterXfer.subaddressSize = 1U;
 		masterXfer.data = &buffer;
 		masterXfer.dataSize = 1U;
@@ -197,34 +182,12 @@ uint8_t * read_DateTime(uint8_t reg)
 		}
 
 		xSemaphoreGive(mutex);
-
-//		ones = buffer & MASK_ONES;
-		units_of_second =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-		tens_of_second  = ( (buffer & MASK_TENS_OF_SECOND)>>4 ) + ASCII_MASK;
-
-		units_of_minute =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-		tens_of_minute  = ( (buffer & MASK_TENS_OF_MINUTE)>>4 ) + ASCII_MASK;
-
-		units_of_hour   =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-		tens_of_hour    = ( (buffer & MASK_TENS_OF_HOUR  )>>4 ) + ASCII_MASK;
-
-		//Date
-		units_of_day   =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-		tens_of_day    = ( (buffer & MASK_TENS_OF_DAY    )>>4 ) + ASCII_MASK;
-
-		units_of_month =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-		tens_of_month  = ( (buffer & MASK_TENS_OF_MONTH  )>>4 ) + ASCII_MASK;
-
-		units_of_year  =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-		tens_of_year   = ( (buffer & MASK_TENS_OF_YEAR   )>>4 ) + ASCII_MASK;
-
-		dateTime[0] = units_of_second;
+		ones = buffer & MASK_ONES;
 
 		PRINTF("%X\n\r", buffer);
-//		PRINTF("%X\n\r", buffer); //1st option
-//		PRINTF("%X\n\r", (uint8_t)buffer); //2nd option
+//		PRINTF("%X\n\r", (uint8_t)buffer);
 
-		return dateTime;
+
 }
 
 //void Read_RTC(void *arg)

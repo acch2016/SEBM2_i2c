@@ -33,8 +33,6 @@ typedef long BaseType_t;
 #define MASK_TENS_OF_MONTH  0x10
 #define MASK_TENS_OF_YEAR   0xF0
 
-#define ASCII_MASK 0x30
-
 //volatile bool g_MasterCompletionFlag = false;
 i2c_master_handle_t g_m_handle;
 //i2c_master_transfer_t masterXfer;
@@ -48,6 +46,7 @@ EventBits_t uxBits;
 
 uint8_t * read_DateTime (uint8_t reg);
 void write_DateTime (uint8_t reg, uint8_t *dato);
+
 
 
 
@@ -108,24 +107,15 @@ void init_i2c(void *arg)
 
 void write_DateTime  (uint8_t reg, uint8_t *dato)
 {
-	static uint8_t dateTime[10];
 
-	dateTime = (dato[0] - ASCII_MASK) << 4;
-	dateTime |= dato[1] - ASCII_MASK;
-	dateTime = (dato[2] - ASCII_MASK) << 4;
-	dateTime |= dato[3] - ASCII_MASK;
-	dateTime = (dato[4] - ASCII_MASK) << 4;
-	dateTime |= dato[5] - ASCII_MASK;
-	dateTime = (dato[6] - ASCII_MASK) << 4;
-	dateTime |= dato[7] - ASCII_MASK;
-	dateTime = (dato[8] - ASCII_MASK) << 4;
-	dateTime |= dato[9] - ASCII_MASK;
-	dateTime = (dato[10]- ASCII_MASK) << 4;
-	dateTime |= dato[11]- ASCII_MASK;
+	static uint8_t* dat_ = 0;
+
+	dat_ = (dato[0]-0x30) << 4;
+	dat_ |= dato[1]-0x30;
 
 	i2c_master_transfer_t masterXfer;
 
-	uint8_t* data_buffer = dateTime;
+	uint8_t* data_buffer = dat_;
 	masterXfer.slaveAddress = 0x6F;
 	masterXfer.direction = kI2C_Read;
 	masterXfer.subaddress = (uint32_t)reg;
@@ -170,7 +160,7 @@ uint8_t * read_DateTime(uint8_t reg)
 
 		masterXfer.slaveAddress = 0x6F;
 		masterXfer.direction = kI2C_Read;
-		masterXfer.subaddress = (uint32_t)reg;
+		masterXfer.subaddress = (uint32_t)0x00;
 		masterXfer.subaddressSize = 1U;
 		masterXfer.data = &buffer;
 		masterXfer.dataSize = 1U;
@@ -199,26 +189,18 @@ uint8_t * read_DateTime(uint8_t reg)
 		xSemaphoreGive(mutex);
 
 //		ones = buffer & MASK_ONES;
-		units_of_second =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-		tens_of_second  = ( (buffer & MASK_TENS_OF_SECOND)>>4 ) + ASCII_MASK;
+		units_of_second = buffer & MASK_UNITS;
+		tens_of_second = buffer & MASK_TENS_OF_SECOND;
 
-		units_of_minute =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-		tens_of_minute  = ( (buffer & MASK_TENS_OF_MINUTE)>>4 ) + ASCII_MASK;
+		units_of_minute = buffer & MASK_UNITS;
+		tens_of_minute = buffer & MASK_TENS_OF_MINUTE;
 
-		units_of_hour   =   (buffer & MASK_UNITS         )      + ASCII_MASK;
-		tens_of_hour    = ( (buffer & MASK_TENS_OF_HOUR  )>>4 ) + ASCII_MASK;
+		units_of_hour = buffer & MASK_UNITS;
+		tens_of_hour = buffer & MASK_TENS_OF_HOUR;
 
-		//Date
-		units_of_day   =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-		tens_of_day    = ( (buffer & MASK_TENS_OF_DAY    )>>4 ) + ASCII_MASK;
 
-		units_of_month =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-		tens_of_month  = ( (buffer & MASK_TENS_OF_MONTH  )>>4 ) + ASCII_MASK;
 
-		units_of_year  =   (buffer & MASK_UNITS          )      + ASCII_MASK;
-		tens_of_year   = ( (buffer & MASK_TENS_OF_YEAR   )>>4 ) + ASCII_MASK;
 
-		dateTime[0] = units_of_second;
 
 		PRINTF("%X\n\r", buffer);
 //		PRINTF("%X\n\r", buffer); //1st option
